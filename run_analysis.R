@@ -1,62 +1,58 @@
- setwd("E:\\DataScience\\GettingData")
- if(!file.exists("./data")){dir.create("./data")}
- fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
- download.file(fileUrl,destfile="./data/Dataset.zip")
+#Download the data from website and unzip at the destination
 
- unzip(zipfile="./data/Dataset.zip",exdir="./data")
- 
- path_rf <- file.path("./data" , "UCI HAR Dataset")
- files<-list.files(path_rf, recursive=TRUE)
- files
- dataActivityTest  <- read.table(file.path(path_rf, "test" , "Y_test.txt" ),header = FALSE)
- dataActivityTrain <- read.table(file.path(path_rf, "train", "Y_train.txt"),header = FALSE)
- 
- dataSubjectTrain <- read.table(file.path(path_rf, "train", "subject_train.txt"),header = FALSE)
- dataSubjectTest  <- read.table(file.path(path_rf, "test" , "subject_test.txt"),header = FALSE)
- 
- dataFeaturesTest  <- read.table(file.path(path_rf, "test" , "X_test.txt" ),header = FALSE)
- dataFeaturesTrain <- read.table(file.path(path_rf, "train", "X_train.txt"),header = FALSE)
- 
- activityLabels <- read.table(file.path(path_rf, "activity_labels.txt"),header = FALSE)
- dataActivityTest$V1 <- factor(dataActivityTest$V1,levels=activityLabels$V1,labels=activityLabels$V2)
- dataActivityTrain$V1 <- factor(dataActivityTrain$V1,levels=activityLabels$V1,labels=activityLabels$V2)
- 
- str(dataActivityTest)
- str(dataActivityTrain)
- str(dataSubjectTrain)
- str(dataSubjectTest)
- str(dataFeaturesTest)
- str(dataFeaturesTrain)
- 
- dataSubject <- rbind(dataSubjectTrain, dataSubjectTest)
- dataActivity<- rbind(dataActivityTrain, dataActivityTest)
- dataFeatures<- rbind(dataFeaturesTrain, dataFeaturesTest)
- 
- names(dataSubject)<-c("subject")
- names(dataActivity)<- c("activity")
- dataFeaturesNames <- read.table(file.path(path_rf, "features.txt"),head=FALSE)
- names(dataFeatures)<- dataFeaturesNames$V2
- 
- dataCombine <- cbind(dataSubject, dataActivity)
- Data <- cbind(dataFeatures, dataCombine)
- 
- subdataFeaturesNames<-dataFeaturesNames$V2[grep("mean\\(\\)|std\\(\\)", dataFeaturesNames$V2)]
- selectedNames<-c(as.character(subdataFeaturesNames), "subject", "activity" )
- Data<-subset(Data,select=selectedNames)
- str(Data)
- 
- head(Data$activity,30)
- names(Data)<-gsub("^t", "time", names(Data))
- names(Data)<-gsub("^f", "frequency", names(Data))
- names(Data)<-gsub("Acc", "Accelerometer", names(Data))
- names(Data)<-gsub("Gyro", "Gyroscope", names(Data))
- names(Data)<-gsub("Mag", "Magnitude", names(Data))
- names(Data)<-gsub("BodyBody", "Body", names(Data))
- names(Data)
- library(plyr);
- Data2<-aggregate(. ~subject + activity, Data, mean)
- Data2<-Data2[order(Data2$subject,Data2$activity),]
- write.table(Data2, file = "tidydata.txt",row.name=FALSE)
- install.packages('knitr', dependencies = TRUE)
- library(knitr)
- knit2html("codebook.Rmd");
+
+if(!file.exists("./input")){dir.create("./input")}
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+download.file(fileUrl,destfile="./input/InputData.zip")
+
+unzip(zipfile="./input/InputData.zip",exdir="./input")
+
+path_input <- file.path("./input" , "UCI HAR Dataset")
+
+
+Merges the training and the test sets to create one data set
+
+inputActTest  <- read.table(file.path(path_input, "test" , "Y_test.txt" ),header = FALSE)
+inputActTrain <- read.table(file.path(path_input, "train", "Y_train.txt"),header = FALSE)
+
+inputSubTrain <- read.table(file.path(path_input, "train", "Subject_train.txt"),header = FALSE)
+inputSubTest  <- read.table(file.path(path_input, "test" , "Subject_test.txt"),header = FALSE)
+
+inputFTest  <- read.table(file.path(path_input, "test" , "X_test.txt" ),header = FALSE)
+inputFTrain <- read.table(file.path(path_input, "train", "X_train.txt"),header = FALSE)
+
+ActivityL <- read.table(file.path(path_input, "Activity_labels.txt"),header = FALSE)
+inputActTest$V1 <- factor(inputActTest$V1,levels=ActivityL$V1,labels=ActivityL$V2)
+inputActTrain$V1 <- factor(inputActTrain$V1,levels=ActivityL$V1,labels=ActivityL$V2)
+
+
+inputSub <- rbind(inputSubTrain, inputSubTest)
+inputAct<- rbind(inputActTrain, inputActTest)
+inputF<- rbind(inputFTrain, inputFTest)
+
+names(inputSub)<-c("Subject")
+names(inputAct)<- c("Activity")
+inputFNames <- read.table(file.path(path_input, "features.txt"),head=FALSE)
+names(inputF)<- inputFNames$V2
+
+inputC <- cbind(inputSub, inputAct)
+ProcData <- cbind(inputF, inputC)
+
+# Extracts only the measurements on the mean and standard deviation for each measurement. 
+
+subinputFNames<-inputFNames$V2[grep("mean\\(\\)|std\\(\\)", inputFNames$V2)]
+sNames<-c(as.character(subinputFNames), "Subject", "Activity" )
+ProcData<-subset(ProcData,select=sNames)
+
+
+names(ProcData)<-gsub("^t", "Time", names(ProcData))
+names(ProcData)<-gsub("^f", "Frequency", names(ProcData))
+names(ProcData)<-gsub("Acc", "Accelerometer", names(ProcData))
+names(ProcData)<-gsub("Gyro", "Gyroscope", names(ProcData))
+names(ProcData)<-gsub("Mag", "Magnitude", names(ProcData))
+names(ProcData)<-gsub("BodyBody", "Body", names(ProcData))
+
+library(plyr);
+FinalData<-aggregate(. ~Subject + Activity, ProcData, mean)
+FinalData<-FinalData[order(FinalData$Subject,FinalData$Activity),]
+write.table(FinalData, file = "outputdata.txt",row.name=FALSE)
