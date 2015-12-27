@@ -10,7 +10,7 @@ unzip(zipfile="./input/InputData.zip",exdir="./input")
 path_input <- file.path("./input" , "UCI HAR Dataset")
 
 
-Merges the training and the test sets to create one data set
+#Merges the training and the test sets to create one data set
 
 inputActTest  <- read.table(file.path(path_input, "test" , "Y_test.txt" ),header = FALSE)
 inputActTrain <- read.table(file.path(path_input, "train", "Y_train.txt"),header = FALSE)
